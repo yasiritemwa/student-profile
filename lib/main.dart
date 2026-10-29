@@ -61,38 +61,95 @@ class ProfileScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: 24),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.email,
-                        color: Theme.of(context).colorScheme.primary,
+              // ADDED: the email card, using our reusable InfoCard
+              const InfoCard(
+                icon: Icons.email,
+                label: 'Email',
+                value: 'yasiritemwa233@gmail.com',
+              ),
+            const InfoCard(
+                icon: Icons.phone,
+                label: 'phone',
+                value: '+237 689 407 899',
+              ),
+              const InfoCard(
+                icon: Icons.location_city,
+                label: 'Location',
+                value: 'Buea, Cameroon',
+              ),
+              const InfoCard(
+                icon: Icons.school,
+                label:'level',
+                value:'level 500',
+              ),
+              // about me
+              const SizedBox(height:18),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(17),
+                decoration: BoxDecoration(
+
+                  color:Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children:[
+                    Text(
+                      'About Me',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Email',
-                              style: Theme.of(context).textTheme.labelMedium,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'yasiritemwa233@email.com',
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'I am a level 500 student at the faculty of engineering (software student) and technology in the university of buea'
+                    'I am doing my final year internship at telnet cameroon located in buea. am learning mobile app woth flutter and dark'
+                ),
+                  ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ADDED: reusable card widget (outside ProfileScreen, at the bottom)
+class InfoCard extends StatelessWidget {
+  const InfoCard({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: Theme.of(context).textTheme.labelMedium),
+                  const SizedBox(height: 2),
+                  Text(value, style: Theme.of(context).textTheme.bodyLarge),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
