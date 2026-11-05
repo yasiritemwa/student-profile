@@ -47,6 +47,18 @@ class StudentProfile {
         'I am doing my final year internship at Telnet Cameroon in Buea, '
         'and I am learning mobile app development with Flutter and Dart.',
   );
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'course': course,
+      'school': school,
+      'email': email,
+      'phone': phone,
+      'location': location,
+      'level': level,
+      'aboutMe': aboutMe,
+    };
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -109,6 +121,24 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // The profile currently shown on screen
   StudentProfile _profile = StudentProfile.defaults;
+  Future<void> _saveProfile() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('students')
+          .doc('my_profile')
+          .set(_profile.toMap());
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile saved!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save profile: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -210,6 +240,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                   child: const Text('Contact Me'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _saveProfile,
+                  icon: const Icon(Icons.save),
+                  label: const Text('Save Profile'),
                 ),
               ),
               const SizedBox(height: 16),
