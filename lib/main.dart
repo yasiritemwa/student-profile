@@ -1,7 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
+}
+
+// ADDED: the data model
+class StudentProfile {
+  const StudentProfile({
+    required this.name,
+    required this.course,
+    required this.school,
+    required this.email,
+    required this.phone,
+    required this.location,
+    required this.level,
+    required this.aboutMe,
+  });
+
+  final String name;
+  final String course;
+  final String school;
+  final String email;
+  final String phone;
+  final String location;
+  final String level;
+  final String aboutMe;
+
+  // The default (dummy) data, shown when nothing is saved yet
+  static const StudentProfile defaults = StudentProfile(
+    name: 'Yasiri Temwa Gaston',
+    course: 'Software Engineering',
+    school: 'University of Buea',
+    email: 'yasiritemwa233@gmail.com',
+    phone: '+237 689 407 899',
+    location: 'Buea, Cameroon',
+    level: 'Level 500',
+    aboutMe: 'I am a Level 500 software engineering student at the '
+        'Faculty of Engineering and Technology, University of Buea. '
+        'I am doing my final year internship at Telnet Cameroon in Buea, '
+        'and I am learning mobile app development with Flutter and Dart.',
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -14,7 +58,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.light;
 
-  // ADDED: flips between light and dark, then redraws the app
   void _toggleTheme() {
     setState(() {
       _themeMode =
@@ -39,7 +82,6 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       themeMode: _themeMode,
-      // CHANGED: no const anymore, and we pass data + a function down
       home: ProfileScreen(
         isDark: _themeMode == ThemeMode.dark,
         onToggleTheme: _toggleTheme,
@@ -48,8 +90,8 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class ProfileScreen extends StatelessWidget {
-  // CHANGED: the screen now receives two values from its parent
+// CHANGED: now a StatefulWidget
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     super.key,
     required this.isDark,
@@ -60,18 +102,27 @@ class ProfileScreen extends StatelessWidget {
   final VoidCallback onToggleTheme;
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // The profile currently shown on screen
+  StudentProfile _profile = StudentProfile.defaults;
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Student Profile'),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // ADDED: the dark mode button, at the right end of the AppBar
         actions: [
           IconButton(
-            onPressed: onToggleTheme,
-            tooltip: isDark ? 'Switch to light mode' : 'Switch to dark mode',
-            icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+            onPressed: widget.onToggleTheme,
+            tooltip: widget.isDark
+                ? 'Switch to light mode'
+                : 'Switch to dark mode',
+            icon: Icon(widget.isDark ? Icons.light_mode : Icons.dark_mode),
           ),
         ],
       ),
@@ -88,44 +139,43 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               Text(
-                'Yasiri Temwa Gaston',
+                _profile.name,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Software Engineering',
+                _profile.course,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 2),
               Text(
-                'University of Buea',
+                _profile.school,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: 24),
-              const InfoCard(
+              InfoCard(
                 icon: Icons.email,
                 label: 'Email',
-                value: 'yasiritemwa233@gmail.com',
+                value: _profile.email,
               ),
-              const InfoCard(
+              InfoCard(
                 icon: Icons.phone,
                 label: 'Phone',
-                value: '+237 689 407 899',
+                value: _profile.phone,
               ),
-              const InfoCard(
+              InfoCard(
                 icon: Icons.location_city,
                 label: 'Location',
-                value: 'Buea, Cameroon',
+                value: _profile.location,
               ),
-              const InfoCard(
+              InfoCard(
                 icon: Icons.school,
                 label: 'Level',
-                value: 'Level 500',
+                value: _profile.level,
               ),
               const SizedBox(height: 18),
-              // About Me
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(17),
@@ -143,17 +193,10 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'I am a Level 500 software engineering student at the '
-                          'Faculty of Engineering and Technology, University of '
-                          'Buea. I am doing my final year internship at Telnet '
-                          'Cameroon in Buea, and I am learning mobile app '
-                          'development with Flutter and Dart.',
-                    ),
+                    Text(_profile.aboutMe),
                   ],
                 ),
               ),
-              // CHANGED: the button now sits outside the About Me box
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
