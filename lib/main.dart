@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +11,6 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-// ADDED: the data model
 class StudentProfile {
   const StudentProfile({
     required this.name,
@@ -33,7 +32,7 @@ class StudentProfile {
   final String level;
   final String aboutMe;
 
-  // The default (dummy) data, shown when nothing is saved yet
+  // Default (dummy) data, shown when nothing is saved yet
   static const StudentProfile defaults = StudentProfile(
     name: 'Yasiri Temwa Gaston',
     course: 'Software Engineering',
@@ -47,6 +46,8 @@ class StudentProfile {
         'I am doing my final year internship at Telnet Cameroon in Buea, '
         'and I am learning mobile app development with Flutter and Dart.',
   );
+
+  // Step 3: object -> Map (for saving to Firestore)
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -58,6 +59,21 @@ class StudentProfile {
       'level': level,
       'aboutMe': aboutMe,
     };
+  }
+
+  // Step 4: Map -> object (for loading from Firestore)
+  factory StudentProfile.fromMap(Map<String, dynamic> map) {
+    const d = StudentProfile.defaults;
+    return StudentProfile(
+      name: map['name'] as String? ?? d.name,
+      course: map['course'] as String? ?? d.course,
+      school: map['school'] as String? ?? d.school,
+      email: map['email'] as String? ?? d.email,
+      phone: map['phone'] as String? ?? d.phone,
+      location: map['location'] as String? ?? d.location,
+      level: map['level'] as String? ?? d.level,
+      aboutMe: map['aboutMe'] as String? ?? d.aboutMe,
+    );
   }
 }
 
@@ -103,7 +119,6 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-// CHANGED: now a StatefulWidget
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     super.key,
@@ -119,8 +134,47 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // The profile currently shown on screen
   StudentProfile _profile = StudentProfile.defaults;
+
+  // Step 5: true while we wait for Firestore
+  bool _isLoading = true;
+
+  // Step 4: runs once when the screen is created
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      // TEMPORARY: delete this line after you have seen the spinner
+      await Future.delayed(const Duration(seconds: 2));
+
+      final doc = await FirebaseFirestore.instance
+          .collection('students')
+          .doc('my_profile')
+          .get();
+
+      if (!mounted) return;
+      final data = doc.data();
+      if (doc.exists && data != null) {
+        setState(() {
+          _profile = StudentProfile.fromMap(data);
+        });
+      }
+    } catch (e) {
+      debugPrint('Could not load profile: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Step 3: save the profile to Firestore
   Future<void> _saveProfile() async {
     try {
       await FirebaseFirestore.instance
@@ -157,7 +211,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      // Step 5: spinner while loading, profile when done
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: SizedBox(
           width: double.infinity,
@@ -171,7 +228,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 18),
               Text(
                 _profile.name,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                style:
+                Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -211,7 +269,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(17),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -219,9 +279,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Text(
                       'About Me',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
                     Text(_profile.aboutMe),
